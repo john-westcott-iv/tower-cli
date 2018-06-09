@@ -28,6 +28,7 @@ from tower_cli import __version__, exceptions as exc
 from tower_cli.api import client
 from tower_cli.conf import with_global_options, Parser, settings, _apply_runtime_setting
 from tower_cli.utils import secho, supports_oauth
+from tower_cli.utils.password import base64_encode
 from tower_cli.constants import CUR_API_VERSION
 from tower_cli.cli.transfer.common import SEND_ORDER
 
@@ -195,6 +196,8 @@ def config(key=None, value=None, scope='user', global_=False, unset=False):
     if unset:
         parser.remove_option('general', key)
     else:
+        if key == 'password':
+            value = base64_encode(value)
         parser.set('general', key, value)
     with open(filename, 'w') as config_file:
         parser.write(config_file)

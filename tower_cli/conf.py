@@ -23,6 +23,7 @@ import os
 import stat
 import warnings
 from functools import wraps
+from tower_cli.utils.password import base64_decode
 
 import six
 from six.moves import configparser
@@ -68,13 +69,18 @@ class Parser(configparser.ConfigParser):
         # If it doesn't work because there's no section header, then
         # create a section header and call the superclass implementation
         # again.
+        values = None
         try:
-            return configparser.ConfigParser._read(self, fp, fpname)
+            values = configparser.ConfigParser._read(self, fp, fpname)
         except configparser.MissingSectionHeaderError:
             fp.seek(0)
             string = '[general]\n%s' % fp.read()
             flo = StringIO(string)  # flo == file-like object
-            return configparser.ConfigParser._read(self, flo, fpname)
+            values = configparser.ConfigParser._read(self, flo, fpname)
+
+        if self.has_option('general', 'password'):
+            self.set('general', 'password', base64_decode(self.get('general', 'password')))
+        return values
 
 
 class Settings(object):
